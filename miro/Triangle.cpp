@@ -36,5 +36,13 @@ Triangle::renderGL()
 bool
 Triangle::intersect(HitInfo& result, const Ray& r,float tMin, float tMax)
 {
+	TriangleMesh::TupleI3 ti3_v = m_mesh->vIndices()[m_index]; //get vertices
+	TriangleMesh::TupleI3 ti3_n = m_mesh->nIndices()[m_index]; //get normals
+	const Vector3 & v0 = m_mesh->vertices()[ti3_v.x]; //vertex a of triangle
+	const Vector3 & v1 = m_mesh->vertices()[ti3_v.y]; //vertex b of triangle
+	const Vector3 & v2 = m_mesh->vertices()[ti3_v.z]; //vertex c of triangle
+	const Vector3 & n0 = m_mesh->normals()[ti3_n.x]; //normal a of triangle
+	const Vector3 & n1 = m_mesh->normals()[ti3_n.y]; //normal b of triangle
+	const Vector3 & n2 = m_mesh->normals()[ti3_n.z]; //normal c of triangle
     return false;
 }
