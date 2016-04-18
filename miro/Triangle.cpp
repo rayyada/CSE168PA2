@@ -44,5 +44,10 @@ Triangle::intersect(HitInfo& result, const Ray& r,float tMin, float tMax)
 	const Vector3 & n0 = m_mesh->normals()[ti3_n.x]; //normal a of triangle
 	const Vector3 & n1 = m_mesh->normals()[ti3_n.y]; //normal b of triangle
 	const Vector3 & n2 = m_mesh->normals()[ti3_n.z]; //normal c of triangle
+
+	//Solve for normal of the plane. In this case, the triangle
+	Vector3 triangleNormal = (n0 + n1 + n2) / 3;
+	triangleNormal.normalize();
+	float D = (triangleNormal.x * v0.x) + (triangleNormal.y * v0.y) + (triangleNormal.z * v0.z);
     return false;
 }

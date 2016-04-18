@@ -85,7 +85,7 @@ makeBunnyScene()
     Material* mat = new Lambert(Vector3(1.0f));
 
     TriangleMesh * bunny = new TriangleMesh;
-    bunny->load("bunny.obj");
+    bunny->load("teapot.obj");
     
     // create all the triangles in the bunny mesh and add to the scene
     for (int i = 0; i < bunny->numTris(); ++i)
@@ -122,7 +122,7 @@ int
 main(int argc, char*argv[])
 {
     // create a scene
-    makeSpiralScene();
+    makeBunnyScene();
 
     MiroWindow miro(&argc, argv);
     miro.mainLoop();
