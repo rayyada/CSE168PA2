@@ -48,7 +48,7 @@ Triangle::intersect(HitInfo& result, const Ray& r,float tMin, float tMax)
 	Vector3 rayOrigin = r.o;
 	Vector3 rayDir = r.d;
 	//Solve for normal of the plane. In this case, the triangle
-	Vector3 triangleNormal = (n0 + n1 + n2) / 3;
+	Vector3 triangleNormal = cross((v1 - v0), (v2 - v0));
 	triangleNormal.normalize();
 	float D = dot(triangleNormal, v0);
 
@@ -61,20 +61,36 @@ Triangle::intersect(HitInfo& result, const Ray& r,float tMin, float tMax)
 
 	// P = o + tR
 	// Ax + By + Cz + D = 0
-	float t = -(dot(triangleNormal, rayOrigin) + D) / parallelCheck;
+	float t = (D - dot(triangleNormal, rayOrigin)) / parallelCheck;
     
 	// Calculate point where ray intersects plane. Note that this does not mean it intersects the triangle
 	Vector3 intersection = rayOrigin + (t*rayDir);
 
-	//Inside-outside test
+	//Check if point intersects the triangle
 	Vector3 edge0 = v1 - v0;
 	Vector3 edge1 = v2 - v1;
 	Vector3 edge2 = v0 - v2;
 	Vector3 check0 = intersection - v0;
 	Vector3 check1 = intersection - v1;
 	Vector3 check2 = intersection - v2;
-	if (dot(triangleNormal, cross(edge0, check0)) > 0 && dot(triangleNormal, cross(edge1, check1)) > 0 && dot(triangleNormal, cross(edge2, check2)) > 0)
+
+	if (dot(cross(edge0, check0), triangleNormal) >= 0 && dot(cross(edge1, check1), triangleNormal) >= 0 && dot(cross(edge2, check2), triangleNormal) >= 0)
 	{
+		// If it's in the triangle, calculate the barycentric coordinates
+		
+		float barycentricHelper = dot(cross((v1 - v0), (v2 - v0)), triangleNormal);
+		float alpha = dot(cross((v2 - v1), (intersection - v1)), triangleNormal) / barycentricHelper;
+		float beta = dot(cross((v0 - v2), (intersection - v2)), triangleNormal) / barycentricHelper;
+		float gamma = dot(cross((v1 - v0), (intersection - v0)), triangleNormal) / barycentricHelper;
+
+		// calculate the normal of the barycentric coordinate
+		Vector3 normalQ = (alpha*n0 + beta*n1 + gamma*n2);
+		normalQ.normalize();
+		
+		result.N = normalQ;
+		result.P = intersection;
+		result.t = t;
+		result.material = new Material();
 		return true;
 	}
 	return false;
