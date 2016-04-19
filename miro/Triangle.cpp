@@ -1,7 +1,12 @@
 #include "Triangle.h"
 #include "TriangleMesh.h"
 #include "Ray.h"
-
+#include "Lambert.h"
+#include "PointLightShading.h"
+#include "DiffuseShading.h"
+#include "SpecularReflectionShading.h"
+#include "SpecularRefractionShading.h"
+#include "SpecularHighlightsShading.h"
 
 Triangle::Triangle(TriangleMesh * m, unsigned int i) :
     m_mesh(m), m_index(i)
@@ -34,7 +39,7 @@ Triangle::renderGL()
 
 
 bool
-Triangle::intersect(HitInfo& result, const Ray& r,float tMin, float tMax)
+Triangle::intersect(HitInfo& result, const Ray& r, float tMin, float tMax)
 {
 	TriangleMesh::TupleI3 ti3_v = m_mesh->vIndices()[m_index]; //get vertices
 	TriangleMesh::TupleI3 ti3_n = m_mesh->nIndices()[m_index]; //get normals
@@ -47,9 +52,11 @@ Triangle::intersect(HitInfo& result, const Ray& r,float tMin, float tMax)
 
 	Vector3 rayOrigin = r.o;
 	Vector3 rayDir = r.d;
+
 	//Solve for normal of the plane. In this case, the triangle
 	Vector3 triangleNormal = cross((v1 - v0), (v2 - v0));
 	triangleNormal.normalize();
+
 	float D = dot(triangleNormal, v0);
 
 	// Check if dot(n, d) == 0. If it's 0, the ray is parallel to the plane, and would give a divide by zero when caluclating t
@@ -62,7 +69,12 @@ Triangle::intersect(HitInfo& result, const Ray& r,float tMin, float tMax)
 	// P = o + tR
 	// Ax + By + Cz + D = 0
 	float t = (D - dot(triangleNormal, rayOrigin)) / parallelCheck;
-    
+	/*
+	if (t < tMin || t > tMax)
+	{
+		return false;
+	}
+	*/
 	// Calculate point where ray intersects plane. Note that this does not mean it intersects the triangle
 	Vector3 intersection = rayOrigin + (t*rayDir);
 
@@ -90,7 +102,7 @@ Triangle::intersect(HitInfo& result, const Ray& r,float tMin, float tMax)
 		result.N = normalQ;
 		result.P = intersection;
 		result.t = t;
-		result.material = new Material();
+		result.material = new PointLightShading();
 		return true;
 	}
 	return false;
