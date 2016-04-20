@@ -1,6 +1,7 @@
 #ifndef CSE168_SPECULARREFLECTIONSHADING_H_INCLUDED
 #define CSE168_SPECULARREFLECTIONSHADING_H_INCLUDED
 
+#include "Miro.h"
 #include "Material.h"
 
 class SpecularReflectionShading : public Material

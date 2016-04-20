@@ -1,6 +1,7 @@
 #ifndef CSE168_DIFFUSESHADING_H_INCLUDED
 #define CSE168_DIFFUSESHADING_H_INCLUDED
 
+#include "Miro.h"
 #include "Material.h"
 
 class DiffuseShading : public Material

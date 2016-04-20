@@ -54,9 +54,11 @@ Triangle::intersect(HitInfo& result, const Ray& r, float tMin, float tMax)
 	Vector3 rayDir = r.d;
 
 	//Solve for normal of the plane. In this case, the triangle
+	// || (V1 - V0) x (V2 x V0) ||	triangle face's normal
 	Vector3 triangleNormal = cross((v1 - v0), (v2 - v0));
 	triangleNormal.normalize();
 
+	// D = dot(normal, any vertice)
 	float D = dot(triangleNormal, v0);
 
 	// Check if dot(n, d) == 0. If it's 0, the ray is parallel to the plane, and would give a divide by zero when caluclating t
@@ -68,13 +70,13 @@ Triangle::intersect(HitInfo& result, const Ray& r, float tMin, float tMax)
 
 	// P = o + tR
 	// Ax + By + Cz + D = 0
+	// t = (D - dot(n, o)) / dot(normal, d)
 	float t = (D - dot(triangleNormal, rayOrigin)) / parallelCheck;
-	/*
+	
 	if (t < tMin || t > tMax)
 	{
 		return false;
 	}
-	*/
 	// Calculate point where ray intersects plane. Note that this does not mean it intersects the triangle
 	Vector3 intersection = rayOrigin + (t*rayDir);
 
@@ -102,7 +104,14 @@ Triangle::intersect(HitInfo& result, const Ray& r, float tMin, float tMax)
 		result.N = normalQ;
 		result.P = intersection;
 		result.t = t;
-		result.material = new PointLightShading();
+
+		PointLightShading *pointlightshading = new PointLightShading();
+		DiffuseShading *diffuseshading = new DiffuseShading();
+		SpecularReflectionShading *specularreflectionshading = new SpecularReflectionShading();
+		SpecularRefractionShading *specularrefractionshading = new SpecularRefractionShading();
+		SpecularHighlightsShading *specularhighlightsshading = new SpecularHighlightsShading();
+
+		result.material = specularhighlightsshading;
 		return true;
 	}
 	return false;
