@@ -64,10 +64,6 @@ PointLightShading::shade(const Ray& ray, const HitInfo& hit, const Scene& scene)
 		else
 		{
 			L += (std::max(0.0f, nDotL / falloff * pLight->wattage() / PI) * result);
-			tempRay2.d = wr;
-			tempRay2.o = hit.P;
-			scene.trace(tempHit2, tempRay2);
-			//L += reflectionColor(tempRay2, tempHit2, scene);
 		}
 	}
 	/*
@@ -87,6 +83,46 @@ PointLightShading::shade(const Ray& ray, const HitInfo& hit, const Scene& scene)
 	*/
 	// add the ambient component
 	L += m_ka;
+
+	//Reflective stuff
+	Vector3 wr = -2 * dot(ray.d, hit.N) * hit.N + ray.d;
+
+	float c1 = -dot(hit.N, ray.d);
+
+	tempRay2.d = wr;
+	tempRay2.o = hit.P;
+	scene.trace(tempHit2, tempRay2);
+	if (tempHit2.t >= 0.0001f)
+	{
+		L += reflectionColor(tempRay2, tempHit2, scene);
+	}
+
+
+	//Refractive stuff
+	float vacuum, air, ice, water, glass, diamond;
+	vacuum = 1.0f;
+	air = 1.00029f;
+	ice = 1.31f;
+	water = 1.33f;
+	glass = 1.65f;
+	diamond = 2.417;
+
+	float n1, n2;
+	n1 = air;
+	n2 = air;
+	//n1 = index of refraction of original medium
+	//n2 = index of refraction of new medium
+	float refraction = n1 / n2;
+	float c2 = sqrt(1 - pow(refraction,2) * (1 - pow(c1, 2)));
+	Vector3 Rr = (refraction * ray.d) + (refraction * c1 - c2) * hit.N;
+
+	tempRay2.d = Rr;
+	tempRay2.o = hit.P;
+	scene.trace(tempHit2, tempRay2);
+	if (tempHit2.t >= 0.0001f)
+	{
+		//L += reflectionColor(tempRay2, tempHit2, scene);
+	}
 
 	return L;
 }
@@ -130,7 +166,7 @@ PointLightShading::reflectionColor(const Ray& ray, const HitInfo& hit, const Sce
 		tempRay.d = l;
 		tempRay.o = hit.P;
 
-		L += (std::max(0.0f, nDotL / falloff * pLight->wattage() / PI) * result);
+		L += (std::max(0.0f, nDotL / falloff * pLight->wattage() / PI) * resultks);
 		
 	}
 	L += m_ka;
