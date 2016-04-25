@@ -49,7 +49,7 @@ Triangle::intersect(HitInfo& result, const Ray& r, float tMin, float tMax)
 	const Vector3 & n0 = m_mesh->normals()[ti3_n.x]; //normal a of triangle
 	const Vector3 & n1 = m_mesh->normals()[ti3_n.y]; //normal b of triangle
 	const Vector3 & n2 = m_mesh->normals()[ti3_n.z]; //normal c of triangle
-
+	float t;
 	Vector3 rayOrigin = r.o;
 	Vector3 rayDir = r.d;
 
@@ -71,12 +71,21 @@ Triangle::intersect(HitInfo& result, const Ray& r, float tMin, float tMax)
 	// P = o + tR
 	// Ax + By + Cz + D = 0
 	// t = (D - dot(n, o)) / dot(normal, d)
-	float t = (D - dot(triangleNormal, rayOrigin)) / parallelCheck;
-	
-	if (t < tMin || t > tMax)
+	if (abs(parallelCheck) > 0.0001f)
+	{
+		t = (dot(triangleNormal, (v0 - rayOrigin))) / parallelCheck;
+		if (t < 0.0001f || t > tMax)
+		{
+			return false;
+		}
+		
+	}
+	else
 	{
 		return false;
 	}
+	//float t = (D - dot(triangleNormal, rayOrigin)) / parallelCheck;
+
 	// Calculate point where ray intersects plane. Note that this does not mean it intersects the triangle
 	Vector3 intersection = rayOrigin + (t*rayDir);
 
@@ -100,18 +109,29 @@ Triangle::intersect(HitInfo& result, const Ray& r, float tMin, float tMax)
 		// calculate the normal of the barycentric coordinate
 		Vector3 normalQ = (alpha*n0 + beta*n1 + gamma*n2);
 		normalQ.normalize();
-		
+
+		Vector3 vertexQ = (alpha*v0 + beta*v1 + gamma*v2);
 		result.N = normalQ;
 		result.P = intersection;
 		result.t = t;
 
-		PointLightShading *pointlightshading = new PointLightShading();
+		PointLightShading *pointlightshading = new PointLightShading({ 1,1,1 } ,{ 0.5,0,0.5 });
 		DiffuseShading *diffuseshading = new DiffuseShading();
 		SpecularReflectionShading *specularreflectionshading = new SpecularReflectionShading();
 		SpecularRefractionShading *specularrefractionshading = new SpecularRefractionShading();
 		SpecularHighlightsShading *specularhighlightsshading = new SpecularHighlightsShading();
 
-		result.material = specularhighlightsshading;
+		float vacuum, air, ice, water, glass, diamond;
+		vacuum = 1.0f;
+		air = 1.00029f;
+		ice = 1.31f;
+		water = 1.33f;
+		glass = 1.65f;
+		diamond = 2.417;
+
+		pointlightshading->setRefractionIndex(ice);
+
+		result.material = pointlightshading;
 		return true;
 	}
 	return false;

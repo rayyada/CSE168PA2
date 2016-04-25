@@ -47,8 +47,11 @@ Scene::raytraceImage(Camera *cam, Image *img)
     Vector3 shadeResult;
     
     // loop over all pixels in the image
+#pragma omp parallel for
     for (int j = 0; j < img->height(); ++j)
     {
+
+#pragma omp parallel for
         for (int i = 0; i < img->width(); ++i)
         {
             ray = cam->eyeRay(i, j, img->width(), img->height());

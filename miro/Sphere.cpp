@@ -56,10 +56,13 @@ Sphere::intersect(HitInfo& result, const Ray& ray,
         return false; 
     }
 
+	if (result.t < 0.0001f)
+	{
+		return false;
+	}
     result.P = ray.o + result.t*ray.d; 
     result.N = (result.P-m_center); 
     result.N.normalize(); 
     result.material = this->m_material; 
-
     return true;
 }

@@ -16,14 +16,18 @@ public:
 
 	void setKd(const Vector3 & kd) { m_kd = kd; }
 	void setKa(const Vector3 & ka) { m_ka = ka; }
+	void setRefractionIndex(const float index) { refractionIndex = index; }
 
 	virtual void preCalc() {}
 
 	virtual Vector3 shade(const Ray& ray, const HitInfo& hit,
 		const Scene& scene) const;
+	Vector3 reflectionColor(const Ray& ray, const HitInfo& hit,
+		const Scene& scene) const;
 protected:
 	Vector3 m_kd;
 	Vector3 m_ka;
+	float refractionIndex;
 };
 
 #endif 
