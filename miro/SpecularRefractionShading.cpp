@@ -1,3 +1,4 @@
+#define NOMINMAX
 #include "SpecularRefractionShading.h"
 #include "Ray.h"
 #include "Scene.h"
@@ -6,7 +7,6 @@
 SpecularRefractionShading::SpecularRefractionShading(const Vector3 & kd, const Vector3 & ka) :
 	m_kd(kd), m_ka(ka)
 {
-
 }
 
 SpecularRefractionShading::~SpecularRefractionShading()
@@ -42,6 +42,13 @@ SpecularRefractionShading::shade(const Ray& ray, const HitInfo& hit, const Scene
 		result *= m_kd;
 
 		L += std::max(0.0f, nDotL / falloff * pLight->wattage() / PI) * result;
+
+		Vector3 r = (-l + 2 * dot(l, hit.N) * hit.N).normalized();
+
+		float eDotR = dot(viewDir, r);
+		eDotR = 0.0f > eDotR ? 0.0f : 1.0f < eDotR ? 1.0f : eDotR; // clamp it to [0..1]
+		eDotR = pow(eDotR, 3);
+		L += std::max(0.0f, eDotR * falloff * pLight->wattage());
 	}
 
 	// add the ambient component

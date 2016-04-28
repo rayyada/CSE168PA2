@@ -7,7 +7,7 @@ class Ray
 {
 public:
     Vector3 o,      //!< Origin of ray
-            d;      //!< Direction of ray
+            d;      //!< Direction of rayz
 
     Ray() : o(), d(Vector3(0.0f,0.0f,1.0f))
     {

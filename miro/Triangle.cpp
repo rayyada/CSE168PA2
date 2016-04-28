@@ -74,16 +74,10 @@ Triangle::intersect(HitInfo& result, const Ray& r, float tMin, float tMax)
 	if (abs(parallelCheck) > 0.0001f)
 	{
 		t = (dot(triangleNormal, (v0 - rayOrigin))) / parallelCheck;
-		if (t < 0.0001f || t > tMax)
-		{
-			return false;
-		}
+		if (t < 0.0001f || t > tMax) return false;
 		
 	}
-	else
-	{
-		return false;
-	}
+	else return false;
 	//float t = (D - dot(triangleNormal, rayOrigin)) / parallelCheck;
 
 	// Calculate point where ray intersects plane. Note that this does not mean it intersects the triangle
@@ -114,25 +108,43 @@ Triangle::intersect(HitInfo& result, const Ray& r, float tMin, float tMax)
 		result.N = normalQ;
 		result.P = intersection;
 		result.t = t;
-
-		PointLightShading *pointlightshading = new PointLightShading({ 1,1,1 } ,{ 0.5,0,0.5 });
-		DiffuseShading *diffuseshading = new DiffuseShading();
-		SpecularReflectionShading *specularreflectionshading = new SpecularReflectionShading();
-		SpecularRefractionShading *specularrefractionshading = new SpecularRefractionShading();
-		SpecularHighlightsShading *specularhighlightsshading = new SpecularHighlightsShading();
-
-		float vacuum, air, ice, water, glass, diamond;
-		vacuum = 1.0f;
-		air = 1.00029f;
-		ice = 1.31f;
-		water = 1.33f;
-		glass = 1.65f;
-		diamond = 2.417;
-
-		pointlightshading->setRefractionIndex(ice);
-
-		result.material = pointlightshading;
+		
+		//result.material = new Lambert(Vector3(.2f,.6f,.6f));
+		result.material = this->m_material;
 		return true;
 	}
 	return false;
-}
+} 
+
+/*
+bool
+Triangle::intersect(HitInfo& result, const Ray& r, float tMin, float tMax)
+{
+	TriangleMesh::TupleI3 ti3 = m_mesh->vIndices()[m_index];
+	const Vector3 & v0 = m_mesh->vertices()[ti3.x]; //vertex a of triangle
+	const Vector3 & v1 = m_mesh->vertices()[ti3.y]; //vertex b of triangle
+	const Vector3 & v2 = m_mesh->vertices()[ti3.z]; //vertex c of triangle
+
+													// init
+	float delta = dot(cross(v0 - v1, v0 - v2), r.d);
+	float delta1 = dot(cross(v0 - r.o, v0 - v2), r.d);
+	float delta2 = dot(cross(v0 - v1, v0 - r.o), r.d);
+	float delta3 = dot(cross(v0 - v1, v0 - v2), v0 - r.o);
+
+	float beta = delta1 / delta;
+	float gamma = delta2 / delta;
+	float t = delta3 / delta;
+
+	if ((beta < 0) || (beta > 1) || (gamma < 0) || (gamma > 1) || ((1 - beta - gamma) < 0) || ((1 - beta - gamma) > 1) || t < tMin + epsilon || t > tMax)
+		return false;
+
+	result.t = t;
+	result.P = r.o + result.t * r.d;
+
+	TriangleMesh::TupleI3 tin3 = m_mesh->nIndices()[m_index];
+	result.N = m_mesh->normals()[tin3.x] * (1 - beta - gamma) + m_mesh->normals()[tin3.y] * beta + m_mesh->normals()[tin3.z] * gamma;
+	result.N.normalize();
+	result.material = this->m_material;
+
+	return true;
+} */

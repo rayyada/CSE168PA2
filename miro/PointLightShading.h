@@ -8,7 +8,7 @@ class PointLightShading : public Material
 {
 public:
 	PointLightShading(const Vector3 & kd = Vector3(1),
-		const Vector3 & ka = Vector3(0));
+		const Vector3 & ka = Vector3(1), const float ri = 1.0f);
 	virtual ~PointLightShading();
 
 	const Vector3 & kd() const { return m_kd; }
@@ -24,10 +24,17 @@ public:
 		const Scene& scene) const;
 	Vector3 reflectionColor(const Ray& ray, const HitInfo& hit,
 		const Scene& scene) const;
+	Vector3 refractionColor(const Ray& ray, const HitInfo& hit,
+		const Scene& scene) const;
+	Vector3 highlightColor(const Ray& ray, const HitInfo& hit,
+		const Scene& scene) const;
+	float refractionIndex;
+	float getRefractionIndex() { return refractionIndex; }
 protected:
 	Vector3 m_kd;
 	Vector3 m_ka;
-	float refractionIndex;
+	Vector3 m_ks;
+	Vector3 m_kr;
 };
 
 #endif 
