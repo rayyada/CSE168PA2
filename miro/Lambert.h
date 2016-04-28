@@ -7,7 +7,8 @@ class Lambert : public Material
 {
 public:
     Lambert(const Vector3 & kd = Vector3(1),
-            const Vector3 & ka = Vector3(0));
+            const Vector3 & ka = Vector3(0),
+		    const Vector3 & ks = Vector3(1));
     virtual ~Lambert();
 
     const Vector3 & kd() const {return m_kd;}
@@ -20,9 +21,15 @@ public:
     
     virtual Vector3 shade(const Ray& ray, const HitInfo& hit,
                           const Scene& scene) const;
+	virtual Vector3 reflection(const Ray& ray, const HitInfo& hit,
+		const Scene& scene) const;
+	virtual Vector3 refraction(const Ray& ray, const HitInfo& hit,
+		const Scene& scene) const;
 protected:
     Vector3 m_kd;
     Vector3 m_ka;
+	Vector3 m_ks;
+	Vector3 m_kr;
 };
 
 #endif // CSE168_LAMBERT_H_INCLUDED

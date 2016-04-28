@@ -59,16 +59,6 @@ Lambert::shade(const Ray& ray, const HitInfo& hit, const Scene& scene) const
 
 		Vector3 l = pLight->position() - hit.P;
 
-		// check for shadow
-		Ray shadow(hit.P + (l.normalized() * epsilon), l);
-		HitInfo shadowHit;
-		// if theree's an object between hitpoint and light source, don't shade it
-		if (scene.trace(shadowHit, shadow, 0.0f, l.length())) {
-			if (dot(shadowHit.N, l) < 0.0f) {
-				continue;
-			}
-		}
-
 		// the inverse-squared falloff 
 		float falloff = 1.0f / (4.0f * PI * l.length2());
 
@@ -88,14 +78,12 @@ Lambert::shade(const Ray& ray, const HitInfo& hit, const Scene& scene) const
 
 
 		// get the specular component
-		// (isSpecular()) {
-			// Reflection vector: r = d + 2(d dot n)n
 			Vector3 r = (-l + 2 * dot(l, hit.N) * hit.N).normalized();
 
 			float eDotR = dot(viewDir, r);
 			eDotR = 0.0f > eDotR ? 0.0f : 1.0f < eDotR ? 1.0f : eDotR; // clamp it to [0..1]
-			//eDotR = pow(eDotR, (int)shininess());
-		//	L += std::max(0.0f, eDotR * falloff * pLight->wattage());
+			eDotR = pow(eDotR, 10);
+			//L += std::max(0.0f, eDotR * falloff * pLight->wattage());
     }
     
     // add the ambient component
