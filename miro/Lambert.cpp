@@ -1,4 +1,5 @@
 #define NOMINMAX
+#include "Worley.h"
 #include "Lambert.h"
 #include "Ray.h"
 #include "Scene.h"
@@ -98,7 +99,14 @@ Lambert::shade(const Ray& ray, const HitInfo& hit, const Scene& scene) const
 	//{
 		//L += reflection(tempRay2, tempHit2, scene);
 	//}
+	float at[3] = { hit.P.x, hit.P.y, hit.P.z };
+	const long  maxOrder = 2;
+	float F[maxOrder];
+	float delta[maxOrder][3];
+	unsigned long ID[maxOrder];
 
+	WorleyNoise::noise3D(at, maxOrder, F, delta, ID);
+	L += Vector3(delta[maxOrder][0], delta[maxOrder][1], delta[maxOrder][2]);
     return L;
 }
 

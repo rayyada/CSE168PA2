@@ -2,12 +2,13 @@
 #include "TriangleMesh.h"
 #include "Ray.h"
 #include "Lambert.h"
+#include "Stone.h"
 #include "PointLightShading.h"
 #include "DiffuseShading.h"
 #include "SpecularReflectionShading.h"
 #include "SpecularRefractionShading.h"
 #include "SpecularHighlightsShading.h"
-
+#include <algorithm>
 Triangle::Triangle(TriangleMesh * m, unsigned int i) :
     m_mesh(m), m_index(i)
 {
@@ -111,11 +112,61 @@ Triangle::intersect(HitInfo& result, const Ray& r, float tMin, float tMax)
 		
 		//result.material = new Lambert(Vector3(.2f,.6f,.6f));
 		result.material = this->m_material;
+		//result.material = new StoneTexture();
 		return true;
 	}
 	return false;
 } 
 
+void Triangle::calcBBMinMax(Vector3& min, Vector3& max, int worldCheck)
+{
+	TriangleMesh::TupleI3 ti3_v = m_mesh->vIndices()[m_index]; //get vertices
+	const Vector3 & v0 = m_mesh->vertices()[ti3_v.x]; //vertex a of triangle
+	const Vector3 & v1 = m_mesh->vertices()[ti3_v.y]; //vertex b of triangle
+	const Vector3 & v2 = m_mesh->vertices()[ti3_v.z]; //vertex c of triangle
+	Vector3 minTemp, maxTemp;
+	// worldCheck is to make sure we don't write over previous calcBBMinMax calls to find the root box min/max
+	if (!worldCheck)
+	{
+		min = v0;
+		max = v0;
+	}
+
+	minTemp.x = std::min(v0.x, v1.x);
+	minTemp.x = std::min(minTemp.x, v2.x);
+	min.x = std::min(min.x, minTemp.x);
+	minTemp.y = std::min(v0.y, v1.y);
+	minTemp.y = std::min(minTemp.y, v2.y);
+	min.y = std::min(min.y, minTemp.y);
+	minTemp.z = std::min(v0.z, v1.z);
+	minTemp.z = std::min(minTemp.z, v2.z);
+	min.z = std::min(min.z, minTemp.z);
+
+	maxTemp.x = std::max(v0.x, v1.x);
+	maxTemp.x = std::max(maxTemp.x, v2.x);
+	max.x = std::max(max.x, maxTemp.x);
+	maxTemp.y = std::max(v0.y, v1.y);
+	maxTemp.y = std::max(maxTemp.y, v2.y);
+	max.y = std::max(max.y, maxTemp.y);
+	maxTemp.z = std::max(v0.z, v1.z);
+	maxTemp.z = std::max(maxTemp.z, v2.z);
+	max.z = std::max(max.z, maxTemp.z);
+}
+
+Vector3 Triangle::calcMidpoint()
+{
+	TriangleMesh::TupleI3 ti3_v = m_mesh->vIndices()[m_index]; //get vertices
+	const Vector3 & v0 = m_mesh->vertices()[ti3_v.x]; //vertex a of triangle
+	const Vector3 & v1 = m_mesh->vertices()[ti3_v.y]; //vertex b of triangle
+	const Vector3 & v2 = m_mesh->vertices()[ti3_v.z]; //vertex c of triangle
+	midpoint = (v0 + v1 + v2) / 3.0;
+	return midpoint;
+}
+
+void Triangle::preCalc()
+{
+	calcMidpoint();
+}
 /*
 bool
 Triangle::intersect(HitInfo& result, const Ray& r, float tMin, float tMax)

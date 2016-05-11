@@ -4,7 +4,7 @@
 #include "Camera.h"
 #include "Image.h"
 #include "Console.h"
-
+#include "BVH.h"
 #include "PointLight.h"
 #include "Sphere.h"
 #include "TriangleMesh.h"
@@ -140,6 +140,54 @@ makeBunnyScene()
 	g_scene->preCalc();
 }
 
+
+void swap(float &x, float &y)
+{
+	float tempX = x;
+	float tempY = y;
+	x = tempY;
+	y = tempX;
+}
+bool boxintersect(const Ray &r)
+{
+	Vector3 min = { -2,-2,-2 };
+	Vector3 max = { 2,2,2 };
+	float tmin = (min.x - r.o.x) / r.d.x;
+	float tmax = (max.x - r.o.x) / r.d.x;
+
+	if (tmin > tmax) swap(tmin, tmax);
+
+	float tymin = (min.y - r.o.y) / r.d.y;
+	float tymax = (max.y - r.o.y) / r.d.y;
+
+	if (tymin > tymax) swap(tymin, tymax);
+
+	if ((tmin > tymax) || (tymin > tmax))
+		return false;
+
+	if (tymin > tmin)
+		tmin = tymin;
+
+	if (tymax < tmax)
+		tmax = tymax;
+
+	float tzmin = (min.z - r.o.z) / r.d.z;
+	float tzmax = (max.z - r.o.z) / r.d.z;
+
+	if (tzmin > tzmax) swap(tzmin, tzmax);
+
+	if ((tmin > tzmax) || (tzmin > tmax))
+		return false;
+
+	if (tzmin > tmin)
+		tmin = tzmin;
+
+	if (tzmax < tmax)
+		tmax = tzmax;
+	printf("txmin: %f tymin: %f tzmin: %f txmax: %f tymax: %f tzmax: %f ", tmin, tymin, tzmin, tmax, tymax, tzmax);
+	return true;
+}
+
 void
 makeTeapotScene()
 {
@@ -186,6 +234,8 @@ makeTeapotScene()
 		g_scene->addObject(t);
 	}
 
+
+
 	/*
 	for (int i = 0; i < teapot2->numTris(); ++i)
 	{
@@ -216,6 +266,12 @@ makeTeapotScene()
 	
 	// let objects do pre-calculations if needed
 	g_scene->preCalc();
+	Ray r;
+	r.d = { 1,-1,-2 };
+	r.o = { -3,4,5 };
+	boxintersect(r);
+
+
 }
 
 void
@@ -326,12 +382,11 @@ main(int argc, char*argv[])
     // create a scene
 	//makeSpiralScene();
 	//makeSphereScene();
-	makeBunnyScene();
-	//makeTeapotScene();
-    
+	makeTeapotScene();
+	//makeTeapotScene();5
 	MiroWindow miro(&argc, argv);
-    miro.mainLoop();
 
+    miro.mainLoop();
     return 0; // never executed
 }
 

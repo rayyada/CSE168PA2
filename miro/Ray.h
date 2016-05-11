@@ -6,17 +6,21 @@
 class Ray
 {
 public:
-    Vector3 o,      //!< Origin of ray
-            d;      //!< Direction of rayz
-
+	Vector3 o,      //!< Origin of ray
+		d,      //!< Direction of rayz
+		invd;
     Ray() : o(), d(Vector3(0.0f,0.0f,1.0f))
     {
-        // empty
+		invd.x = 1.0f / d.x;
+		invd.y = 1.0f / d.y;
+		invd.z = 1.0f / d.z;
     }
 
     Ray(const Vector3& o, const Vector3& d) : o(o), d(d)
     {
-        // empty
+		invd.x = 1.0f / d.x;
+		invd.y = 1.0f / d.y;
+		invd.z = 1.0f / d.z;
     }
 };
 
