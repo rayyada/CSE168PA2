@@ -3,6 +3,33 @@
 #include "Console.h"
 #include "TriangleMesh.h"
 
+static int rays = 0, boxInts = 0, triInts = 0;
+
+void BVH::setRays(int i)
+{
+	numRays = i;
+}
+void BVH::setBoxI(int i)
+{
+	rayBoxIntersections = i;
+}
+void BVH::setTriI(int i)
+{
+	rayTriangleIntersections = i;
+}
+int BVH::getRays()
+{
+	return numRays;
+}
+int BVH::getBoxI()
+{
+	return rayBoxIntersections;
+}
+int BVH::getTriI()
+{
+	return rayTriangleIntersections;
+}
+
 BVHNode::BVHNode() {
 }
 
@@ -26,6 +53,7 @@ void build(const std::vector<Intersectable *> &objects)
 • Set world bounding box to root node
 • build_recursive(0, Objs.size(), root, 0);
 */
+
 
 void
 BVH::build(Objects * objs)
@@ -85,12 +113,9 @@ BVH::build(Objects * objs)
 		if (tempNode->isLeaf())
 		{
 			checkLeaf++;
-			std::cout << "leaf leftIndex: " << tempNode->getIndex() << " numObjs: " << tempNode->getNObjs() << std::endl;
 		}
-		Box * tempBox = tempNode->getBox();
-		//std::cout << "Node NObjs: " << tempNode->getNObjs() << " Node getIndex: " << tempNode->getIndex() << " Box SA: " << tempBox->getSA() << std::endl;
 	}
-	std::cout << "nodes size: " << nodes->size() << " numLeafs: " << checkLeaf <<  std::endl;
+	std::cout << "BVH Nodes: " << nodes->size() << " BVH Node Leafs: " << checkLeaf <<  std::endl;
 	
 }
 
@@ -150,7 +175,8 @@ void BVH::build_recursive(int leftIndex, int rightIndex, BVHNode *node, int dept
 
 		std::sort(boxes->begin() + leftIndex, boxes->begin() + (rightIndex - 1), xCompare);
 		// end loop at rightIndex - 1 so both boxes have at least one object in them when comparing. Also prevents out of scope memory segfaults
-		for (int i = leftIndex; i < rightIndex - 1; i++)
+		// Since checking every single possible combination takes too long, cut it to 15 different cuts for faster BVH creation
+		for (int i = leftIndex; i < rightIndex - 1; i = i + ((rightIndex - leftIndex) / 15) + 1)
 		{
 			// Get bounding box min/max, create temporary boxes for temp left/right children, calculate SAH, store min costs
 			BBMinMax(leftMin, leftMax, leftIndex, i + 1);
@@ -169,7 +195,7 @@ void BVH::build_recursive(int leftIndex, int rightIndex, BVHNode *node, int dept
 		}
 
 		std::sort(boxes->begin() + leftIndex, boxes->begin() + (rightIndex - 1), yCompare);
-		for (int i = leftIndex; i < rightIndex-1; i++)
+		for (int i = leftIndex; i < rightIndex-1; i = i + ((rightIndex - leftIndex) / 15) + 1)
 		{
 			BBMinMax(leftMin, leftMax, leftIndex, i + 1);
 			BBMinMax(rightMin, rightMax, i+1, rightIndex);
@@ -187,7 +213,7 @@ void BVH::build_recursive(int leftIndex, int rightIndex, BVHNode *node, int dept
 		}
 
 		std::sort(boxes->begin() + leftIndex, boxes->begin() + (rightIndex - 1), zCompare);
-		for (int i = leftIndex; i < rightIndex - 1; i++)
+		for (int i = leftIndex; i < rightIndex - 1; i = i+((rightIndex - leftIndex) / 15)+1)
 		{
 			BBMinMax(leftMin, leftMax, leftIndex, i + 1);
 			BBMinMax(rightMin, rightMax, i + 1, rightIndex);
@@ -424,22 +450,205 @@ BVH::intersect(HitInfo& minHit, const Ray& ray, float tMin, float tMax) const
 {
     // Here you would need to traverse the BVH to perform ray-intersection
     // acceleration. For now we just intersect every object.
-
-    bool hit = false;
+	//std::cout << "CALL!\n";
+	
+	bool hit = false;
     HitInfo tempMinHit;
     minHit.t = MIRO_TMAX;
-    
+
+	std::stack<BVHNode*> stack;
+	Box* currentBox = root->getBox();
+	Box* primaryBox;
+	BVHNode* currentNode = root;
+	BVHNode * leftChildNode;
+	BVHNode * rightChildNode;
+	
+	bool leftHit, rightHit;
+	rays++;
+	//First check if the worldbox was intersected
+	if (currentBox->intersect(minHit, ray, tMin, tMax))
+	{
+		boxInts++;
+		while (true)
+		{
+			//Get children nodes if current node is not a leaf node
+			if (!currentNode->isLeaf())
+			{
+				leftChildNode = nodes->at(currentNode->getIndex());
+				// right child is always +1 to the index of the left child
+				rightChildNode = nodes->at(currentNode->getIndex() + 1);
+				leftHit = leftChildNode->getBox()->intersect(minHit, ray, tMin, tMax);
+				rightHit = rightChildNode->getBox()->intersect(minHit, ray, tMin, tMax);
+
+				//std::cout << "boxes from index " << currentNode->getIndex() << " to " << currentNode->getIndex() + currentNode->getNObjs() << std::endl;
+
+				// Both children were hit
+				if (leftHit && rightHit)
+				{
+					currentNode = leftChildNode;
+					//StackItem tempstack;
+					//tempstack.ptr = rightChildNode;
+					stack.push(rightChildNode);
+					boxInts++;
+					boxInts++;
+					continue;
+				}
+				//One child was hit
+				else if (leftHit)
+				{
+					currentNode = leftChildNode;
+					boxInts++;
+					continue;
+				}
+				else if (rightHit)
+				{
+					currentNode = rightChildNode;
+					boxInts++;
+					continue;
+				}
+				//Neither were hit
+				else
+				{
+					// Do nothing
+				}
+			}
+			else
+			{
+				for (int i = currentNode->getIndex(); i < currentNode->getIndex() + currentNode->getNObjs(); i++)
+				{
+					//std::cout << "boxes from index " << currentNode->getIndex() << " to " << currentNode->getIndex() + currentNode->getNObjs() << std::endl;
+					primaryBox = boxes->at(i);
+					//if (primaryBox->intersect(minHit, ray, tMin, tMax))
+					//{
+					if (primaryBox->getPrimary()->intersect(tempMinHit, ray, tMin, tMax))
+					{
+						triInts++;
+						hit = true;
+						if (tempMinHit.t < minHit.t)
+						{
+							minHit = tempMinHit;
+						}
+					}
+					//}
+				}
+			}
+			//Pop stack and see if other nodes need to be checked
+			if (stack.empty())
+			{
+				return hit;
+			}
+
+			currentNode = stack.top();
+			stack.pop();
+		}
+	}
+	else
+	{
+		return false;
+	}
+
+	/*
     for (size_t i = 0; i < m_objects->size(); ++i)
     {
-        if ((*m_objects)[i]->intersect(tempMinHit, ray, tMin, tMax))
-        {
-            hit = true;
-            if (tempMinHit.t < minHit.t)
-                minHit = tempMinHit;
-        }
+		if (worldBox->intersect(minHit, ray, tMin, tMax))
+		{
+
+			if ((*m_objects)[i]->intersect(tempMinHit, ray, tMin, tMax))
+			{
+				hit = true;
+				if (tempMinHit.t < minHit.t)
+				minHit = tempMinHit;
+				//std::cout << "HELLO!\n";
+			}
+		}
     }
-    
+    */
     return hit;
+}
+
+bool BVH::intersectHelper(HitInfo& minHit, const Ray& ray, float tMin, float tMax)
+{
+	std::stack<BVHNode*> stack;
+	Box* currentBox = root->getBox();
+	Box* primaryBox;
+	BVHNode* currentNode = root;
+	BVHNode * leftChildNode;
+	BVHNode * rightChildNode;
+	bool hit = false;
+	HitInfo tempMinHit;
+	bool leftHit, rightHit;
+
+	//First check if the worldbox was intersected
+	if (currentBox->intersect(minHit, ray, tMin, tMax))
+	{
+		while (true)
+		{
+			//Get children nodes if current node is not a leaf node
+			if (!currentNode->isLeaf())
+			{
+				leftChildNode = nodes->at(currentNode->getIndex());
+				// right child is always +1 to the index of the left child
+				rightChildNode = nodes->at(currentNode->getIndex() + 1);
+				leftHit = leftChildNode->getBox()->intersect(minHit, ray, tMin, tMax);
+				rightHit = rightChildNode->getBox()->intersect(minHit, ray, tMin, tMax);
+
+
+				// Both children were hit
+				if (leftHit && rightHit)
+				{
+					currentNode = leftChildNode;
+					//StackItem tempstack;
+					//tempstack.ptr = rightChildNode;
+					stack.push(rightChildNode);
+				}
+				//One child was hit
+				else if (leftHit)
+				{
+					currentNode = leftChildNode;
+				}
+				else if (rightHit)
+				{
+					currentNode = rightChildNode;
+				}
+				//Neither were hit
+				else
+				{
+					// Do nothing
+				}
+			}
+			else
+			{
+				for (int i = currentNode->getIndex(); i < currentNode->getIndex() + currentNode->getNObjs(); i++)
+				{
+					primaryBox = boxes->at(i);
+					//if (primaryBox->intersect(minHit, ray, tMin, tMax))
+					//{
+					if (primaryBox->getPrimary()->intersect(minHit, ray, tMin, tMax))
+					{
+						hit = true;
+						if (tempMinHit.t < minHit.t)
+						{
+							minHit = tempMinHit;
+						}
+					}
+					//}
+				}
+			}
+
+			//Pop stack and see if other nodes need to be checked
+			if (stack.empty())
+			{
+				return hit;
+			}
+
+			currentNode = stack.top();
+		}
+	}
+	else
+	{
+		return false;
+	}
+
 }
 
 void BVH::drawBox(Vector3 min, Vector3 max) {

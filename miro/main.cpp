@@ -383,7 +383,7 @@ main(int argc, char*argv[])
     // create a scene
 	//makeSpiralScene();
 	//makeSphereScene();
-	makeTeapotScene();
+	makeBunnyScene();
 	//makeTeapotScene();5
 	MiroWindow miro(&argc, argv);
 

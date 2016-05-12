@@ -32,6 +32,7 @@ public:
 	float getSA();
 	bool primaryBox();
 	void insertPrimary(Object* p);
+	Object* getPrimary();
 	/*
 	struct PointerCompare {
 		bool operator()(const Box* l, const Box* r) {

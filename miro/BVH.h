@@ -6,6 +6,7 @@
 #include "Box.h"
 #include "Triangle.h"
 #include <algorithm>
+#include <stack>
 
 class BVHNode {
 private:
@@ -40,13 +41,27 @@ public:
 	void drawBox(Vector3 min, Vector3 max);
 	void BBMinMax(Vector3& min, Vector3& max, int start, int end);
 	float SAHCalculate(Box * parent, Box * left, Box * right, int numElemLeft, int numElemRight);
+	bool intersectHelper(HitInfo& minHit, const Ray& ray, float tMin, float tMax);
+
+	void setRays(int i);
+	void setBoxI(int i);
+	void setTriI(int i);
+	int getRays();
+	int getBoxI();
+	int getTriI();
 protected:
     Objects * m_objects;
 	std::vector<BVHNode*>* nodes;
 	Box* worldBox;
 	std::vector<Box*>* boxes;
 	BVHNode* root;
+
+	int rayBoxIntersections, rayTriangleIntersections, numRays;
 };
 
-
+struct StackItem {
+	BVHNode *ptr;
+	float t;
+};
 #endif // CSE168_BVH_H_INCLUDED
+

@@ -69,6 +69,7 @@ Scene::raytraceImage(Camera *cam, Image *img)
     
     printf("Rendering Progress: 100.000%\n");
     debug("done Raytracing!\n");
+	//std::cout << "Number of Rays: " << m_bvh.getCounter()->getBoxI() << "rayBoxIntersections: " << m_bvh.getCounter()->getBoxI() << " rayTriangleIntersections: " << m_bvh.getCounter()->getTriI() << std::endl;
 }
 
 bool

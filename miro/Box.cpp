@@ -68,6 +68,10 @@ void Box::insertPrimary(Object* p)
 	primaryOBJ = p;
 }
 
+Object* Box::getPrimary()
+{
+	return primaryOBJ;
+}
 void Box::setContainer(std::vector<Box*>* c)
 {
 	container = c;
