@@ -18,8 +18,10 @@ public:
 	BVHNode();
 	virtual ~BVHNode();
 	void setBox(Box* boxxy) { box = boxxy; }
-	void makeLeaf(unsigned int index_, unsigned int n_objs_) {  }
-	void makeNode(unsigned int left_index_, unsigned int n_objs) {  }
+	void makeLeaf(unsigned int index_, unsigned int n_objs_) { index = index_; n_objs = n_objs_; leaf = true; }
+	void makeNode(unsigned int left_index_, unsigned int n_objs_) {
+		index = left_index_; n_objs = n_objs_; leaf = false;
+	}
 	// n_objs in makeNode is for debug purposes only, and may be omitted later on
 	bool isLeaf() { return leaf; }
 	unsigned int getIndex() { return index; }
@@ -36,6 +38,8 @@ public:
                    float tMin = 0.0f, float tMax = MIRO_TMAX) const;
 
 	void drawBox(Vector3 min, Vector3 max);
+	void BBMinMax(Vector3& min, Vector3& max, int start, int end);
+	float SAHCalculate(Box * parent, Box * left, Box * right, int numElemLeft, int numElemRight);
 protected:
     Objects * m_objects;
 	std::vector<BVHNode*>* nodes;

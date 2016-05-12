@@ -247,7 +247,7 @@ makeTeapotScene()
 	}
 	*/
 
-	
+	/*
 	// create the floor triangle
 	TriangleMesh * floor = new TriangleMesh;
 	floor->createSingleTriangle();
@@ -263,7 +263,7 @@ makeTeapotScene()
 	t->setMesh(floor);
 	t->setMaterial(mat1);
 	g_scene->addObject(t);
-	
+	*/
 	// let objects do pre-calculations if needed
 	g_scene->preCalc();
 	Ray r;
@@ -356,6 +356,7 @@ makeSphereScene()
 	}
 	*/
 	// create the floor triangle
+	/*
 	TriangleMesh * floor = new TriangleMesh;
 	floor->createSingleTriangle();
 	floor->setV1(Vector3(0, 0, 10));
@@ -370,7 +371,7 @@ makeSphereScene()
 	t->setMesh(floor);
 	t->setMaterial(mat4);
 	g_scene->addObject(t);
-
+	*/
 	// let objects do pre-calculations if needed
 	g_scene->preCalc();
 }

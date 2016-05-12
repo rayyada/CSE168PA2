@@ -6,7 +6,7 @@
 #include "Box.h"
 #include <algorithm>
 
-Box::Box(Triangle * tri)
+Box::Box(Triangle * tri, bool p)
 {
 	container = new std::vector<Box*>();
 
@@ -39,19 +39,34 @@ Box::Box(Triangle * tri)
 	maxTemp.z = std::max(v0.z, v1.z);
 	maxTemp.z = std::max(maxTemp.z, v2.z);
 	max.z = std::max(max.z, maxTemp.z);
+	calcMidpoint();
+	primary = p;
 }
-
-Box::Box(Vector3 boxmin, Vector3 boxmax)
+Box::Box(Vector3 boxmin, Vector3 boxmax, bool p)
 {
 	container = new std::vector<Box*>();
 	min = boxmin;
 	max = boxmax;
+	calcMidpoint();
+	primary = p;
+}
+float Box::getSA()
+{
+	return (6 * pow((max.x - min.x), 2));
 }
 Box::~Box()
 {
 
 }
 
+bool Box::primaryBox()
+{
+	return primary;
+}
+void Box::insertPrimary(Object* p)
+{
+	primaryOBJ = p;
+}
 
 void Box::setContainer(std::vector<Box*>* c)
 {

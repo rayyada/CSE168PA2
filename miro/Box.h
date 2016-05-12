@@ -7,8 +7,8 @@
 class Box : public Object
 {
 public:
-	Box(Triangle * tri);
-	Box(Vector3 boxmin, Vector3 boxmax);
+	Box(Triangle * tri, bool p);
+	Box(Vector3 boxmin, Vector3 boxmax, bool p);
 	virtual ~Box();
 
     void setMaterial(const Material* m) {m_material = m;}
@@ -29,6 +29,9 @@ public:
 	float largestDimensionSize();
 	Vector3 calcMidpoint();
 	Vector3 getMidpoint();
+	float getSA();
+	bool primaryBox();
+	void insertPrimary(Object* p);
 	/*
 	struct PointerCompare {
 		bool operator()(const Box* l, const Box* r) {
@@ -45,6 +48,8 @@ protected:
 	Vector3 min, max;
 	std::vector<Box*>* container;
 	Vector3 midpoint;
+	Object* primaryOBJ;
+	bool primary;
 };
 
 #endif // CSE168_OBJECT_H_INCLUDED
