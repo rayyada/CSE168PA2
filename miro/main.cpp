@@ -15,7 +15,8 @@
 #include "SpecularReflectionShading.h"
 #include "SpecularRefractionShading.h"
 #include "MiroWindow.h"
-
+#include "PathTracer.h"
+#include "Assignment2.h"
 void
 makeSpiralScene()
 {
@@ -84,7 +85,7 @@ makeBunnyScene()
 	PointLight * light = new PointLight;
 	light->setPosition(Vector3(-3, 5, 10));
 	light->setColor(Vector3(1, 1, 1));
-	light->setWattage(500);
+	light->setWattage(100);
 	g_scene->addLight(light);
 	PointLight * light2 = new PointLight;
 	light2->setPosition(Vector3(9, 10, 20));
@@ -92,7 +93,7 @@ makeBunnyScene()
 	light2->setWattage(600);
 	g_scene->addLight(light2);
 
-	Material* mat = new Lambert(Vector3(1.0f));
+	Material* mat = new PointLightShading(Vector3(1.0f));
 
 	TriangleMesh * bunny = new TriangleMesh;
 	//TriangleMesh * bunny2 = new TriangleMesh;
@@ -120,7 +121,7 @@ makeBunnyScene()
 	}
 	*/
 	// create the floor triangle
-	/*
+	
 	TriangleMesh * floor = new TriangleMesh;
 	floor->createSingleTriangle();
 	floor->setV1(Vector3(0, 0, 10));
@@ -135,7 +136,7 @@ makeBunnyScene()
 	t->setMesh(floor);
 	t->setMaterial(mat);
 	g_scene->addObject(t);
-	*/
+	
 	// let objects do pre-calculations if needed
 	g_scene->preCalc();
 }
@@ -188,6 +189,7 @@ bool boxintersect(const Ray &r)
 	return true;
 }
 
+/*
 void
 makeTeapotScene()
 {
@@ -195,7 +197,7 @@ makeTeapotScene()
 	g_scene = new Scene;
 	g_image = new Image;
 
-	g_image->resize(128, 128);
+	g_image->resize(512, 512);
 
 	// set up the camera
 	g_camera->setBGColor(Vector3(0.0f, 0.0f, 0.2f));
@@ -218,6 +220,7 @@ makeTeapotScene()
 
 	Material* mat = new PointLightShading(Vector3(0.4f,0.4f,0.5f),Vector3(0.0f),1.31f);
 	Material*mat2 = new Lambert(Vector3(0.7f, 0.5f, 0.5f));
+	Material *mat3 = new Pathtracer(Vector3(.7f));
 	Material*mat1 = new PointLightShading(Vector3(0.0f, 0.5f, 0.5f), Vector3(0.1f));
 	TriangleMesh * teapot = new TriangleMesh;
 	//TriangleMesh * teapot2 = new TriangleMesh;
@@ -230,7 +233,7 @@ makeTeapotScene()
 		Triangle* t = new Triangle;
 		t->setIndex(i);
 		t->setMesh(teapot);
-		t->setMaterial(mat);
+		t->setMaterial(mat3);
 		g_scene->addObject(t);
 	}
 
@@ -245,9 +248,9 @@ makeTeapotScene()
 	t->setMaterial(mat);
 	g_scene->addObject(t);
 	}
-	*/
+	
 
-	/*
+	
 	// create the floor triangle
 	TriangleMesh * floor = new TriangleMesh;
 	floor->createSingleTriangle();
@@ -261,9 +264,9 @@ makeTeapotScene()
 	Triangle* t = new Triangle;
 	t->setIndex(0);
 	t->setMesh(floor);
-	t->setMaterial(mat1);
+	t->setMaterial(mat3);
 	g_scene->addObject(t);
-	*/
+	
 	// let objects do pre-calculations if needed
 	g_scene->preCalc();
 	Ray r;
@@ -273,7 +276,7 @@ makeTeapotScene()
 
 
 }
-
+*/
 void
 makeSphereScene()
 {
@@ -303,10 +306,14 @@ makeSphereScene()
 	light2->setWattage(150);
 	g_scene->addLight(light2);
 	
-	Material* mat = new PointLightShading(Vector3(.7f,.2f,.2f), Vector3(0.01f), 1.33f);
+//	Material* mat = new PathTracer(Vector3(.7f,.2f,.2f));
 	Material* mat2 = new PointLightShading(Vector3(.5f,.3f,.5f), Vector3(0.01f), 1.73f);
 	Material* mat3 = new PointLightShading(Vector3(.3f,.8f,.8f), Vector3(0.01f), 1.21f);
-	Material* mat4 = new Lambert(Vector3(1.0f),Vector3(0.1f));
+	Material* mat4 = new Pathtracer(Vector3(1.0f),Vector3(0.1f));
+	Material* path1 = new Pathtracer(Vector3(.9f), Vector3(0.1f));
+	Material* path2 = new Pathtracer(Vector3(.9f), Vector3(0.1f));
+	Material* path3 = new Pathtracer(Vector3(.9f), Vector3(0.1f));
+
 	//Material* mat4 = new PointLightShading(Vector3(0.5f, 0.9f, 0.3f),Vector3(0.0f));
 	//Material* diff = new DiffuseShading(Vector3(1.0f));
 	//Material* refl = new SpecularReflectionShading(Vector3(1.0f));
@@ -330,7 +337,7 @@ makeSphereScene()
 	Sphere * sphere1 = new Sphere;
 	sphere1->setCenter(Vector3(x[0], y[0], z[0]));
 	sphere1->setRadius(r / 10);
-	sphere1->setMaterial(mat);
+	sphere1->setMaterial(mat2);
 	g_scene->addObject(sphere1);
 
 	Sphere * sphere2 = new Sphere;
@@ -376,6 +383,60 @@ makeSphereScene()
 	g_scene->preCalc();
 }
 
+void makeBoxScene() {
+	g_camera = new Camera;
+	g_scene = new Scene;
+	g_image = new Image;
+
+	g_image->resize(512, 512);
+
+	// set up the camera
+	g_camera->setBGColor(Vector3(0.0f, 0.0f, 0.0f));
+	g_camera->setEye(Vector3(2.75, 2.75, 5.25));
+	g_camera->setLookAt(Vector3(2.75, 2.75, 0));
+	g_camera->setUp(Vector3(0, 1, 0));
+	g_camera->setFOV(55);
+
+	// create and place a point light source
+	PointLight * light = new PointLight;
+	light->setPosition(Vector3(2.75, 5.5, -2.75));
+	light->setColor(Vector3(1, 1, 1));
+	light->setWattage(10);
+	g_scene->addLight(light);
+
+
+	//Material* white = new PathTracer(Vector3(1.0f));
+	//Material* red = new PathTracer(Vector3(1.0f, 0.0f, 0.0f));
+	//Material* green = new PathTracer(Vector3(0.0f, 1.0f, 0.0f));
+	Material* white = new Pathtracer(Vector3(1.0f));
+	Material* green = new Pathtracer(Vector3(.3f, .7f, .3f));
+	Material* red = new Pathtracer(Vector3(.7f, .3f, .3f));
+	Material* blue = new Pathtracer(Vector3(.3f, .3f, .7f));
+	TriangleMesh * mesh = new TriangleMesh;
+	mesh->load("cornell_box.obj");
+
+	// add triangles to scene
+	for (int i = 0; i < mesh->numTris(); i++) {
+		Triangle* t = new Triangle;
+		t->setIndex(i);
+		t->setMesh(mesh);
+		//t->setMaterial(whiteDiffuse);
+		t->setMaterial(white);
+		switch (i) {
+		case 4: case 5: t->setMaterial(red); break; // red
+		case 6: case 7: t->setMaterial(green); break; // green:
+		default:        t->setMaterial(white); break;
+		}
+		g_scene->addObject(t);
+	}
+
+	// let objects do pre-calculations if needed
+	g_scene->preCalc();
+	Ray r;
+	r.d = { 1,-1,-2 };
+	r.o = { -3,4,5 };
+	//boxintersect(r);
+}
 
 int
 main(int argc, char*argv[])
@@ -383,8 +444,12 @@ main(int argc, char*argv[])
     // create a scene
 	//makeSpiralScene();
 	//makeSphereScene();
-	makeBunnyScene();
-	//makeTeapotScene();5
+	//makeBunnyScene();
+	//makeBoxScene();
+    //makeTeapotScene();
+    //makeSponzaScene();
+	//makeBunny1Scene();
+	//makeBunny20Scene();
 	MiroWindow miro(&argc, argv);
 
     miro.mainLoop();

@@ -12,9 +12,9 @@ PointLightShading::PointLightShading(const Vector3 & kd, const Vector3 & ka, flo
 	// m_kt = refraction
 	// m_ks = reflection
 	// indx = refraction index
-	Vector3 split = Vector3(1.0f) - m_kd;
-	m_ks = Vector3(split / 2);
-	m_kr = Vector3(split / 2);
+	//Vector3 split = Vector3(1.0f) - m_kd;
+	//m_ks = Vector3(split / 2);
+	//m_kr = Vector3(split / 2);
 }
 
 PointLightShading::~PointLightShading()
@@ -130,7 +130,7 @@ PointLightShading::shade(const Ray& ray, const HitInfo& hit, const Scene& scene)
 	scene.trace(tempHit2, tempRay2);
 	//if (tempHit2.t >= 0.0001f)
 	//{
-		L += reflectionColor(tempRay2, tempHit2, scene);
+		//L += reflectionColor(tempRay2, tempHit2, scene);
 	//}
 
 	
@@ -166,7 +166,7 @@ PointLightShading::shade(const Ray& ray, const HitInfo& hit, const Scene& scene)
 	scene.trace(tempHit2, tempRay2);
 	//if (tempHit2.t >= 0.0001f)
 	//{
-		L += refractionColor(tempRay2, tempHit2, scene);
+		//L += refractionColor(tempRay2, tempHit2, scene);
 	//} 
 
 	// add the ambient component

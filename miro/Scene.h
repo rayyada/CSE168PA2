@@ -24,7 +24,7 @@ public:
     void raytraceImage(Camera *cam, Image *img);
     bool trace(HitInfo& minHit, const Ray& ray,
                float tMin = 0.0f, float tMax = MIRO_TMAX) const;
-
+	bool Scene::trace(const Ray& ray, Vector3& res, int b);
 protected:
     Objects m_objects;
     BVH m_bvh;

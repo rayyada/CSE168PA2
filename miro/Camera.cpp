@@ -99,33 +99,45 @@ Camera::eyeRay(int x, int y, int imageWidth, int imageHeight)
 {
     // first compute the camera coordinate system 
     // ------------------------------------------
-
     // wDir = e - (e+m_viewDir) = -m_vView
     const Vector3 wDir = Vector3(-m_viewDir).normalize(); 
     const Vector3 uDir = cross(m_up, wDir).normalize(); 
     const Vector3 vDir = cross(wDir, uDir);    
-
-
-
     // next find the corners of the image plane in camera space
     // --------------------------------------------------------
-
     const float aspectRatio = (float)imageWidth/(float)imageHeight; 
-
-
     const float top     = tan(m_fov*HalfDegToRad); 
     const float right   = aspectRatio*top; 
-
     const float bottom  = -top; 
     const float left    = -right; 
-
-
-
     // transform x and y into camera space 
     // -----------------------------------
-
     const float imPlaneUPos = left   + (right - left)*(((float)x+0.5f)/(float)imageWidth); 
     const float imPlaneVPos = bottom + (top - bottom)*(((float)y+0.5f)/(float)imageHeight); 
-
     return Ray(m_eye, (imPlaneUPos*uDir + imPlaneVPos*vDir - wDir).normalize());
+}
+
+Ray
+Camera::eyeRayRand(int x, int y, int width, int height)
+{
+	// first compute the camera coordinate system 
+	// ------------------------------------------
+	// wDir = e - (e+m_viewDir) = -m_vView
+	const Vector3 wDir = Vector3(-m_viewDir).normalize();
+	const Vector3 uDir = cross(m_up, wDir).normalize();
+	const Vector3 vDir = cross(wDir, uDir);
+	// next find the corners of the image plane in camera space
+	// --------------------------------------------------------
+	const float aspectRatio = (float)width / (float)height;
+	const float top = tan(m_fov*HalfDegToRad);
+	const float right = aspectRatio*top;
+	const float bottom = -top;
+	const float left = -right;
+	// transform x and y into camera space 
+	// -----------------------------------
+	float randx = (float)rand() / (float)RAND_MAX;
+	float randy = (float)rand() / (float)RAND_MAX;
+	const float imPlaneUPos = left + (right - left)*(((float)x + randx) / (float)width);
+	const float imPlaneVPos = bottom + (top - bottom)*(((float)y + randy) / (float)height);
+	return Ray(m_eye, (imPlaneUPos*uDir + imPlaneVPos*vDir - wDir).normalize());
 }

@@ -42,7 +42,7 @@ public:
     inline const Vector3 & bgColor() const  {return m_bgColor;}
 
     Ray eyeRay(int x, int y, int imageWidth, int imageHeight);
-    
+	Ray eyeRayRand(int x, int y, int imageWidth, int imageHeight);
     void drawGL();
 
 private:
