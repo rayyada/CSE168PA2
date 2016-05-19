@@ -3,7 +3,8 @@
 #include "Console.h"
 #include "TriangleMesh.h"
 
-static int rays = 0, boxInts = 0, triInts = 0;
+int BVH::boxInts = 0;
+int BVH::triInts = 0;
 
 void BVH::setRays(int i)
 {
@@ -23,11 +24,11 @@ int BVH::getRays()
 }
 int BVH::getBoxI()
 {
-	return rayBoxIntersections;
+	return boxInts;
 }
 int BVH::getTriI()
 {
-	return rayTriangleIntersections;
+	return triInts;
 }
 
 BVHNode::BVHNode() {
@@ -58,6 +59,7 @@ void build(const std::vector<Intersectable *> &objects)
 void
 BVH::build(Objects * objs)
 {
+
     // construct the bounding volume hierarchy
     Objects::iterator it;
 	// store vector for our objects into BVH
@@ -97,7 +99,7 @@ BVH::build(Objects * objs)
 	}
 	// create the world bounding box with the newfound worldmin/worldmax
 	worldBox = new Box(worldMin, worldMax, false);
-	worldBox->setContainer(containerTemp);
+	//worldBox->setContainer(containerTemp);
 	//std::cout << "minx: " << min.x << "miny: " << min.y << "minx: " << min.z << "maxx: " << max.x << "maxy: " << max.y << "maxx: " << max.z << std::endl;
 	root->setBox(worldBox);
 	root->makeNode(0, 1);	
@@ -136,12 +138,13 @@ void build_recursive(int left_index, int right_index, BVHNode *node, int depth)
 
 void BVH::build_recursive(int leftIndex, int rightIndex, BVHNode *node, int depth)
 {
+	//std::cout << "STOP!\n";
 	// Check if the current node can continue splitting or should stop. 
 	int triangleThreshhold = 8;
 	int currentCapacity = rightIndex - leftIndex;
 
 	// We want 1-8 triangles per box, so stop whenever the node reaches said limit and set them as leaf nodes
-	if ((rightIndex - leftIndex) <= 8) //  || (other termination criteria))
+	if ((rightIndex - leftIndex) <= 100) //  || (other termination criteria))
 	{
 		//std::cout << "STOP!\n";
 		node->makeLeaf(leftIndex, (rightIndex - leftIndex));
@@ -176,64 +179,69 @@ void BVH::build_recursive(int leftIndex, int rightIndex, BVHNode *node, int dept
 		std::sort(boxes->begin() + leftIndex, boxes->begin() + (rightIndex - 1), xCompare);
 		// end loop at rightIndex - 1 so both boxes have at least one object in them when comparing. Also prevents out of scope memory segfaults
 		// Since checking every single possible combination takes too long, cut it to 15 different cuts for faster BVH creation
-		for (int i = leftIndex; i < rightIndex - 1; i = i + ((rightIndex - leftIndex) / 15) + 1)
+		for (int i = leftIndex + 1; i < rightIndex; i = i + ceil((float)(rightIndex - leftIndex) / 16))
 		{
+			// leftIndex = 2, rightIndex = 7
+			// i = 3
+			// 0 | 1 2 3 4
+			// 2 3 4 5 | 6
 			// Get bounding box min/max, create temporary boxes for temp left/right children, calculate SAH, store min costs
-			BBMinMax(leftMin, leftMax, leftIndex, i + 1);
-			BBMinMax(rightMin, rightMax, i + 1, rightIndex);
-			numItemsLeft = i + 1 - leftIndex;
-			numItemsRight = rightIndex - 1 - i;
+			BBMinMax(leftMin, leftMax, leftIndex, i );
+			BBMinMax(rightMin, rightMax, i , rightIndex);
+			numItemsLeft = i - leftIndex ;
+			numItemsRight = rightIndex- i;
 			Box tempBoxLeft = Box(leftMin, leftMax, false);
 			Box tempBoxRight = Box(rightMin, rightMax, false);
 			tempCostX = SAHCalculate(currentBox, &tempBoxLeft, &tempBoxRight, numItemsLeft, numItemsRight);
-			minCostX = std::min(minCostX, tempCostX);
-			if (minCostX == tempCostX)
+			//minCostX = std::min(minCostX, tempCostX);
+			if (minCostX > tempCostX && i != rightIndex-1)
 			{
-				splitX = i + 1;
+				minCostX = tempCostX;
+				splitX = i ;
 			}
 			//std::cout << "tempCostX: " << tempCostX << " minCostX: " << minCostX << " numItemsLeft: " << numItemsLeft << " numItemsRight: " << numItemsRight << std::endl;
 		}
 
 		std::sort(boxes->begin() + leftIndex, boxes->begin() + (rightIndex - 1), yCompare);
-		for (int i = leftIndex; i < rightIndex-1; i = i + ((rightIndex - leftIndex) / 15) + 1)
+		for (int i = leftIndex + 1; i < rightIndex; i = i + ceil((float)(rightIndex - leftIndex) / 16))
 		{
-			BBMinMax(leftMin, leftMax, leftIndex, i + 1);
-			BBMinMax(rightMin, rightMax, i+1, rightIndex);
-			numItemsLeft = i + 1 - leftIndex;
+			BBMinMax(leftMin, leftMax, leftIndex, i );
+			BBMinMax(rightMin, rightMax, i, rightIndex);
+			numItemsLeft = i - leftIndex;
 			numItemsRight = rightIndex - i;
 			Box tempBoxLeft = Box(leftMin, leftMax, false);
 			Box tempBoxRight = Box(rightMin, rightMax, false);
 			tempCostY = SAHCalculate(currentBox, &tempBoxLeft, &tempBoxRight, numItemsLeft, numItemsRight);
-			minCostY = std::min(minCostY, tempCostY);
-			if (minCostY == tempCostY)
+			//minCostX = std::min(minCostX, tempCostX);
+			if (minCostY > tempCostY && i != rightIndex - 1)
 			{
-				splitY = i + 1;
+				minCostY = tempCostY;
+				splitY = i;
 			}
 			//std::cout << "tempCostX: " << tempCostY << " minCostX: " << minCostY << " numItemsLeft: " << numItemsLeft << " numItemsRight: " << numItemsRight << std::endl;
 		}
 
 		std::sort(boxes->begin() + leftIndex, boxes->begin() + (rightIndex - 1), zCompare);
-		for (int i = leftIndex; i < rightIndex - 1; i = i+((rightIndex - leftIndex) / 15)+1)
+		for (int i = leftIndex + 1; i < rightIndex ; i = i+ ceil((float)(rightIndex - leftIndex) / 16))
 		{
-			BBMinMax(leftMin, leftMax, leftIndex, i + 1);
-			BBMinMax(rightMin, rightMax, i + 1, rightIndex);
-			numItemsLeft = i + 1 - leftIndex;
+			BBMinMax(leftMin, leftMax, leftIndex, i);
+			BBMinMax(rightMin, rightMax, i, rightIndex);
+			numItemsLeft = i - leftIndex;
 			numItemsRight = rightIndex - i;
 			Box tempBoxLeft = Box(leftMin, leftMax, false);
 			Box tempBoxRight = Box(rightMin, rightMax, false);
 			tempCostZ = SAHCalculate(currentBox, &tempBoxLeft, &tempBoxRight, numItemsLeft, numItemsRight);
-			minCostZ = std::min(minCostZ, tempCostZ);
-			if (minCostZ == tempCostZ)
+			//minCostZ = std::min(minCostZ, tempCostZ);
+			if (minCostZ > tempCostZ && i != rightIndex - 1)
 			{
-				splitZ = i + 1;
+				minCostZ = tempCostZ;
+				splitZ = i;
 			}
-			//std::cout << "tempCostX: " << tempCostZ << " minCostX: " << minCostZ << " numItemsLeft: " << numItemsLeft << " numItemsRight: " << numItemsRight << std::endl;
 		}
-
-		//std::cout << "minCostX: " << minCostX << " minCostY: " << minCostY << " minCostZ: " << minCostZ << " leftIndex: " << leftIndex << " rightIndex: " << rightIndex << std::endl;
 
 		// Determine which axis had the least cost and proceed from there
 		minCost = std::min(std::min(minCostX, minCostY), minCostZ);
+
 		if (minCost == minCostX)
 		{
 			// Sort again now that we know which axis to use 
@@ -256,24 +264,6 @@ void BVH::build_recursive(int leftIndex, int rightIndex, BVHNode *node, int dept
 
 			build_recursive(leftIndex, splitX, leftNode, depth + 1);
 			build_recursive(splitX, rightIndex, rightNode, depth + 1);
-			/*
-			// SAH test. If cost < number of objects in parent node, continue iterating. else, set children as leaf nodes and return
-			if (minCost < node->getNObjs())
-			{
-				//std::cout << "minCost: " << minCost << " leftIndex: " << leftIndex << " rightIndex: " << rightIndex << std::endl;
-
-				build_recursive(leftIndex, splitX, leftNode, depth + 1);
-				build_recursive(splitX, rightIndex, rightNode, depth + 1);
-			}
-			else
-			{
-				//std::cout << "LEAF minCost: " << minCost << " leftIndex: " << leftIndex << " rightIndex: " << rightIndex << std::endl;
-				leftNode->makeLeaf(leftIndex, (rightIndex - leftIndex));
-				rightNode->makeLeaf(splitX, (rightIndex - splitX));
-			}
-			*/
-			//std::cout << "leftBox SA: " << leftBox->getSA() << " numItemsLeft: " << splitX - leftIndex << " rightBox SA : " << rightBox->getSA() << " numItemsRight: " << rightIndex - (splitX) << std::endl;
-			//std::cout << "minCost: " << SAHCalculate(currentBox, leftBox, rightBox, splitX - leftIndex, rightIndex - splitX) << std::endl;
 		}
 		else if (minCost == minCostY)
 		{
@@ -291,20 +281,6 @@ void BVH::build_recursive(int leftIndex, int rightIndex, BVHNode *node, int dept
 			nodes->push_back(rightNode);
 			build_recursive(leftIndex, splitY, leftNode, depth + 1);
 			build_recursive(splitY, rightIndex, rightNode, depth + 1);
-			/*
-			if (minCost < node->getNObjs())
-			{
-				//std::cout << "minCost: " << minCost << " leftIndex: " << leftIndex << " rightIndex: " << rightIndex << std::endl;
-				build_recursive(leftIndex, splitY, leftNode, depth + 1);
-				build_recursive(splitY, rightIndex, rightNode, depth + 1);
-			}
-			else
-			{
-				//std::cout << "LEAF minCost: " << minCost << " leftIndex: " << leftIndex << " rightIndex: " << rightIndex << std::endl;
-				leftNode->makeLeaf(leftIndex, (rightIndex - leftIndex));
-				rightNode->makeLeaf(splitY, (rightIndex - splitY));
-			}
-			*/
 		}
 		else
 		{
@@ -322,91 +298,7 @@ void BVH::build_recursive(int leftIndex, int rightIndex, BVHNode *node, int dept
 			nodes->push_back(rightNode);
 			build_recursive(leftIndex, splitZ, leftNode, depth + 1);
 			build_recursive(splitZ, rightIndex, rightNode, depth + 1);
-			/*
-			if (minCost < node->getNObjs())
-			{
-				//std::cout << "minCost: " << minCost << " leftIndex: " << leftIndex << " rightIndex: " << rightIndex << std::endl;
-				build_recursive(leftIndex, splitZ, leftNode, depth + 1);
-				build_recursive(splitZ, rightIndex, rightNode, depth + 1);
-			}
-			else
-			{
-				//std::cout << "LEAF minCost: " << minCost << " leftIndex: " << leftIndex << " rightIndex: " << rightIndex << std::endl;
-				leftNode->makeLeaf(leftIndex, (rightIndex - leftIndex));
-				rightNode->makeLeaf(splitZ, (rightIndex - splitZ));
-			}
-			*/
 		}
-		/*
-		// SAH Look through Y-Axis for lowest cost split
-		std::sort(boxes->begin()+ leftIndex, boxes->begin()+ (rightIndex - 1), yCompare);
-		dimensionMidpoint = currentBox->getMidpoint().y;
-		for (int i = leftIndex; i < rightIndex; i++)
-		{
-			Box* tempBox = boxes->at(i);
-			if (tempBox->getMidpoint().y > dimensionMidpoint)
-			{
-				splitIndex = i;
-				break;
-			}
-			//std::cout << "box.y = " << tempBox->getMidpoint().x << std::endl;
-		}
-
-		// SAH Look through Z-Axis for lowest cost split
-		std::sort(boxes->begin() + leftIndex, boxes->begin() + (rightIndex - 1), zCompare);
-		dimensionMidpoint = currentBox->getMidpoint().z;
-		for (int i = leftIndex; i < rightIndex; i++)
-		{
-			Box* tempBox = boxes->at(i);
-			if (tempBox->getMidpoint().z > dimensionMidpoint)
-			{
-				splitIndex = i;
-				break;
-			}
-			//std::cout << "box.z = " << tempBox->getMidpoint().x << std::endl;
-		}
-
-
-		// In case we don't find anything on the right side of the split
-		if (splitIndex == -1)
-		{
-			splitIndex = rightIndex;
-			std::cout << "HELLO!\n";
-		}
-		*/
-		//std::cout << "boxes size: " << boxes->size() << std::endl;
-		//std::cout << "dimensionMidpoint : " << dimensionMidpoint << std::endl;
-		//std::cout << "boxes size: " << boxes->size() << " splitIndex : " << splitIndex << std::endl;
-		/*
-		BBMinMax(leftMin, leftMax, leftIndex, splitIndex);
-		BBMinMax(rightMin, rightMax, splitIndex, rightIndex);
-
-		// Setup nodes/boxes for left/right children nodes 
-		Box* leftBox = new Box(leftMin, leftMax);
-		Box* rightBox = new Box(rightMin, rightMax);
-		BVHNode* leftNode = new BVHNode();
-		BVHNode* rightNode = new BVHNode();
-		//leftNode->makeNode(leftIndex, (splitIndex - leftIndex));
-		//rightNode->makeNode(splitIndex, (rightIndex - splitIndex));
-		leftNode->setBox(leftBox);
-		rightNode->setBox(rightBox); 
-
-		// Set leftchild index and number of objects inside current node
-		node->makeNode(nodes->size(), (rightIndex-leftIndex));
-		nodes->push_back(leftNode);
-		nodes->push_back(rightNode);
-
-		build_recursive(leftIndex, splitIndex, leftNode, depth + 1);
-		build_recursive(splitIndex, rightIndex, rightNode, depth + 1);
-		*/
-		/*
-		std::cout << "LEFT MIN X: " << leftMin.x << " Y: " << leftMin.y << " Z: " << leftMin.z << std::endl;
-		std::cout << "LEFT MAX X: " << leftMax.x << " Y: " << leftMax.y << " Z: " << leftMax.z << std::endl;
-		std::cout << "RIGHT MIN X: " << rightMin.x << " Y: " << rightMin.y << " Z: " << rightMin.z << std::endl;
-		std::cout << "RIGHT MAX X: " << rightMax.x << " Y: " << rightMax.y << " Z: " << rightMax.z << std::endl;
-		*/
-
-
 	}
 }
 
@@ -463,11 +355,9 @@ BVH::intersect(HitInfo& minHit, const Ray& ray, float tMin, float tMax) const
 	BVHNode * leftChildNode;
 	BVHNode * rightChildNode;
 	
+	float tmin = 0.0f, tmax = 0.0f, leftTMin = 0.0f, leftTMax = 0.0f, rightTMin = 0.0f, rightTMax = 0.0f;
 	bool leftHit, rightHit;
-	rays++;
 	//First check if the worldbox was intersected
-	if (currentBox->intersect(minHit, ray, tMin, tMax))
-	{
 		boxInts++;
 		while (true)
 		{
@@ -477,17 +367,42 @@ BVH::intersect(HitInfo& minHit, const Ray& ray, float tMin, float tMax) const
 				leftChildNode = nodes->at(currentNode->getIndex());
 				// right child is always +1 to the index of the left child
 				rightChildNode = nodes->at(currentNode->getIndex() + 1);
+				/*
+				leftHit = leftChildNode->getBox()->intersectHelper(minHit, ray, leftTMin, leftTMax);
+				rightHit = rightChildNode->getBox()->intersectHelper(minHit, ray, rightTMin, rightTMax);
+				*/
 				leftHit = leftChildNode->getBox()->intersect(minHit, ray, tMin, tMax);
 				rightHit = rightChildNode->getBox()->intersect(minHit, ray, tMin, tMax);
-
-				//std::cout << "boxes from index " << currentNode->getIndex() << " to " << currentNode->getIndex() + currentNode->getNObjs() << std::endl;
 
 				// Both children were hit
 				if (leftHit && rightHit)
 				{
+					/*
+					if (leftTMax < rightTMin)
+					{
+						currentNode = leftChildNode;
+						boxInts++;
+						continue;
+					}
+					else if (rightTMax < leftTMin)
+					{
+						currentNode = rightChildNode;
+						boxInts++;
+						continue;
+					}
+
+					if (leftTMin < rightTMin)
+					{
+						currentNode = leftChildNode;
+						stack.push(rightChildNode);
+					}
+					else
+					{
+						currentNode = rightChildNode;
+						stack.push(leftChildNode);
+					}
+					*/
 					currentNode = leftChildNode;
-					//StackItem tempstack;
-					//tempstack.ptr = rightChildNode;
 					stack.push(rightChildNode);
 					boxInts++;
 					boxInts++;
@@ -535,17 +450,13 @@ BVH::intersect(HitInfo& minHit, const Ray& ray, float tMin, float tMax) const
 			//Pop stack and see if other nodes need to be checked
 			if (stack.empty())
 			{
+				//std::cout << boxInts << std::endl;
 				return hit;
 			}
 
 			currentNode = stack.top();
 			stack.pop();
 		}
-	}
-	else
-	{
-		return false;
-	}
 
 	/*
     for (size_t i = 0; i < m_objects->size(); ++i)
@@ -563,6 +474,7 @@ BVH::intersect(HitInfo& minHit, const Ray& ray, float tMin, float tMax) const
 		}
     }
     */
+	//std::cout << boxInts;
     return hit;
 }
 
